@@ -1,0 +1,8 @@
+{
+  "name": "GABON AGRI-SENTINEL",
+  "description": "Une plateforme de rupture pour l'agriculture gabonaise alliant IA, drones, blockchain et logistique intelligente.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

@@ -1,0 +1,87 @@
+
+export type Language = 'FR' | 'EN' | 'ES';
+
+export const translations = {
+  FR: {
+    dashboard: "Tableau de bord",
+    buyer_hub: "Centrale d'Achat",
+    producer_hub: "Espace Producteur",
+    sentinelle: "Sentinelle (IA Drone)",
+    marketplace: "Marché des Tokens",
+    logistics: "Hub Logistique IoT",
+    sgg_portal: "Portail SGG/BCEG",
+    blockchain: "Registre National",
+    media_kit: "Dossier Investisseur",
+    logout: "Quitter",
+    session: "Session",
+    welcome: "Bienvenue sur Gabon Agri-Sentinel",
+    auth_title: "GABON AGRI-SENTINEL",
+    auth_subtitle: "Système d'Accès Souverain National",
+    identify_as: "Accès",
+    verify_button: "VALIDER L'ACCÈS",
+    verifying: "VÉRIFICATION...",
+    success_auth: "IDENTITÉ VALIDÉE",
+    opening_terminal: "Ouverture du terminal...",
+    producer: "AGRICULTEUR",
+    buyer: "ACHETEUR",
+    investor: "INVESTISSEUR",
+    banker: "ÉTAT / BANQUIER",
+    back: "Retour"
+  },
+  EN: {
+    dashboard: "Dashboard",
+    buyer_hub: "Buyer Central",
+    producer_hub: "Producer Space",
+    sentinelle: "Sentinel (Drone AI)",
+    marketplace: "Token Marketplace",
+    logistics: "IoT Logistics Hub",
+    sgg_portal: "SGG/BCEG Portal",
+    blockchain: "National Ledger",
+    media_kit: "Investor Kit",
+    logout: "Logout",
+    session: "Session",
+    welcome: "Welcome to Gabon Agri-Sentinel",
+    auth_title: "GABON AGRI-SENTINEL",
+    auth_subtitle: "National Sovereign Access System",
+    identify_as: "Access",
+    verify_button: "VALIDATE ACCESS",
+    verifying: "VERIFYING...",
+    success_auth: "IDENTITY VALIDATED",
+    opening_terminal: "Opening terminal...",
+    producer: "FARMER",
+    buyer: "BUYER",
+    investor: "INVESTOR",
+    banker: "STATE / BANKER",
+    back: "Back"
+  },
+  ES: {
+    dashboard: "Panel de Control",
+    buyer_hub: "Central de Compras",
+    producer_hub: "Espacio Productor",
+    sentinelle: "Centinela (IA Dron)",
+    marketplace: "Mercado de Tokens",
+    logistics: "Hub Logístico IoT",
+    sgg_portal: "Portal SGG/BCEG",
+    blockchain: "Registro Nacional",
+    media_kit: "Dossier de Inversión",
+    logout: "Cerrar Sesión",
+    session: "Sesión",
+    welcome: "Bienvenido a Gabon Agri-Sentinel",
+    auth_title: "GABÓN AGRI-SENTINEL",
+    auth_subtitle: "Sistema de Acceso Soberano Nacional",
+    identify_as: "Acceso",
+    verify_button: "VALIDAR ACCESO",
+    verifying: "VERIFICANDO...",
+    success_auth: "IDENTIDAD VALIDADA",
+    opening_terminal: "Abriendo terminal...",
+    producer: "AGRICULTOR",
+    buyer: "COMPRADOR",
+    investor: "INVERSOR",
+    banker: "ESTADO / BANQUERO",
+    back: "Volver"
+  }
+};
+
+export const t = (key: keyof typeof translations['FR'], lang: Language): string => {
+  return translations[lang][key] || translations['FR'][key];
+};
