@@ -4,6 +4,8 @@ import { dbService, DBCredit, DBTranche } from '../services/db';
 
 const SGGPortal: React.FC = () => {
   const [activeView, setActiveView] = useState<'DOSSIERS' | 'COMPENSATIONS'>('DOSSIERS');
+  const [isBankerAuthenticated, setIsBankerAuthenticated] = useState(false);
+  const [bankerCredentials, setBankerCredentials] = useState({ matricule: '', code: '' });
   const [investments, setInvestments] = useState<DBCredit[]>([]);
   const [selectedInvestment, setSelectedInvestment] = useState<DBCredit | null>(null);
   const [automatedFees, setAutomatedFees] = useState<any[]>([]);
@@ -12,8 +14,20 @@ const SGGPortal: React.FC = () => {
   const [toast, setToast] = useState<{msg: string, type: 'SUCCESS' | 'INFO'} | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (isBankerAuthenticated) {
+      loadData();
+    }
+  }, [isBankerAuthenticated]);
+
+  const handleBankerLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (bankerCredentials.matricule.length > 3 && bankerCredentials.code.length > 3) {
+      setIsBankerAuthenticated(true);
+      setToast({ msg: "Authentification BCEG réussie. Session sécurisée active.", type: 'SUCCESS' });
+    } else {
+      setToast({ msg: "Identifiants invalides. Veuillez vérifier votre matricule BCEG.", type: 'INFO' });
+    }
+  };
 
   const loadData = async () => {
     const credits = await dbService.getCredits();
@@ -75,6 +89,55 @@ const SGGPortal: React.FC = () => {
     });
   };
 
+  if (!isBankerAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[600px] animate-in fade-in duration-700">
+        <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 max-w-md w-full text-center">
+          <div className="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center text-4xl mx-auto mb-8 shadow-xl">🏦</div>
+          <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-2">Accès Sécurisé BCEG</h2>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 italic">Portail de Supervision des Garanties Souveraines</p>
+          
+          <form onSubmit={handleBankerLogin} className="space-y-4">
+            <div className="text-left">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Matricule BCEG</label>
+              <input 
+                type="text" 
+                required
+                placeholder="Ex: BCEG-2026-X"
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                value={bankerCredentials.matricule}
+                onChange={(e) => setBankerCredentials({...bankerCredentials, matricule: e.target.value})}
+              />
+            </div>
+            <div className="text-left">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Code d'Accès</label>
+              <input 
+                type="password" 
+                required
+                placeholder="••••••••"
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                value={bankerCredentials.code}
+                onChange={(e) => setBankerCredentials({...bankerCredentials, code: e.target.value})}
+              />
+            </div>
+            <button 
+              type="submit"
+              className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-slate-800 transition-all mt-4"
+            >
+              S'authentifier
+            </button>
+          </form>
+          
+          <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <p className="text-[8px] font-bold text-blue-700 uppercase leading-relaxed italic">
+              Attention: Cette session est auditée par le système Agri-Sentinel Core. Toute transaction est irréversible.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 relative">
       {toast && (
@@ -94,12 +157,18 @@ const SGGPortal: React.FC = () => {
                   <button onClick={() => setActiveView('DOSSIERS')} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${activeView === 'DOSSIERS' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-400'}`}>Pilotage Crédit</button>
                   <button onClick={() => setActiveView('COMPENSATIONS')} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${activeView === 'COMPENSATIONS' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-400'}`}>Compensations Auto</button>
                </div>
+               <button 
+                onClick={() => setIsBankerAuthenticated(false)}
+                className="ml-auto px-4 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all"
+               >
+                 Déconnexion BCEG
+               </button>
             </div>
             <h2 className="text-4xl font-black tracking-tight leading-none mb-4 uppercase italic">
               Supervision <span className="text-blue-400">Transactionnelle</span>
             </h2>
             <p className="text-slate-400 max-w-xl font-medium italic">
-               Les données ci-dessous sont extraites en temps réel de la base de données locale sécurisée de la plateforme.
+               Session active pour : <span className="text-white">{bankerCredentials.matricule}</span> • Les données sont extraites en temps réel.
             </p>
           </div>
         </div>

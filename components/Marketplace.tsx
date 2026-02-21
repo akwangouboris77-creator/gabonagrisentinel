@@ -26,7 +26,7 @@ const initialTokens: (FarmToken & { img: string, tags: string[], riskLevel: 'LOW
   }
 ];
 
-type PaymentMethod = 'AIRTEL' | 'MOOV' | 'WALLET' | 'BANK';
+type PaymentMethod = 'AIRTEL' | 'MOOV' | 'WALLET' | 'BANK' | 'CARD';
 
 const Marketplace: React.FC = () => {
   const [role, setRole] = useState<'INVESTOR' | 'FARMER'>('INVESTOR');
@@ -37,16 +37,41 @@ const Marketplace: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'SELECT' | 'CONFIRM' | 'SUCCESS'>('SELECT');
   const [notification, setNotification] = useState<{msg: string, type: 'success' | 'info'} | null>(null);
+  
+  const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvc: '' });
+  const [cardErrors, setCardErrors] = useState({ number: '', expiry: '' });
 
   const totalCost = selectedToken ? selectedToken.pricePerUnit * quantity : 0;
+
+  const validateCard = () => {
+    let isValid = true;
+    const errors = { number: '', expiry: '' };
+
+    if (!/^\d{16}$/.test(cardDetails.number.replace(/\s/g, ''))) {
+      errors.number = "Numéro de carte invalide (16 chiffres requis)";
+      isValid = false;
+    }
+
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardDetails.expiry)) {
+      errors.expiry = "Format MM/AA requis";
+      isValid = false;
+    }
+
+    setCardErrors(errors);
+    return isValid;
+  };
 
   const handlePurchaseClick = (token: typeof initialTokens[0]) => {
     setSelectedToken(token);
     setPaymentStep('SELECT');
     setQuantity(1);
+    setCardDetails({ number: '', expiry: '', cvc: '' });
+    setCardErrors({ number: '', expiry: '' });
   };
 
   const executePayment = async () => {
+    if (paymentMethod === 'CARD' && !validateCard()) return;
+
     setIsProcessing(true);
     // Simulation d'un délai bancaire/blockchain réel
     await new Promise(resolve => setTimeout(resolve, 3000));
@@ -103,7 +128,7 @@ const Marketplace: React.FC = () => {
                       { id: 'AIRTEL', name: 'Airtel Money', icon: '🔴' },
                       { id: 'MOOV', name: 'Moov Money', icon: '🔵' },
                       { id: 'WALLET', name: 'G-AS Wallet', icon: '🛡️' },
-                      { id: 'BANK', name: 'Virement/Carte', icon: '🏦' }
+                      { id: 'CARD', name: 'Carte Bancaire', icon: '💳' }
                     ].map(m => (
                       <button
                         key={m.id}
@@ -139,9 +164,53 @@ const Marketplace: React.FC = () => {
                   <h3 className="text-3xl font-black text-slate-800 tracking-tighter">CONFIRMEZ VOTRE APPUI</h3>
                 </div>
 
-                <div className="p-8 bg-blue-50 rounded-[3rem] border border-blue-100 text-center space-y-2">
-                   <p className="text-sm font-bold text-blue-900 italic">"Vous vous apprêtez à acquérir {quantity} tokens de {selectedToken.cropType}. Vos fonds seront placés sous séquestre SGG."</p>
-                </div>
+                {paymentMethod === 'CARD' ? (
+                  <div className="space-y-4 p-8 bg-slate-50 rounded-[3rem] border border-slate-100">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Numéro de Carte</label>
+                      <input 
+                        type="text" 
+                        placeholder="0000 0000 0000 0000"
+                        className={`w-full px-6 py-4 bg-white border rounded-2xl text-sm font-bold focus:outline-none transition-all ${cardErrors.number ? 'border-red-500' : 'border-slate-200'}`}
+                        value={cardDetails.number}
+                        onChange={(e) => setCardDetails({...cardDetails, number: e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19)})}
+                      />
+                      {cardErrors.number && <p className="text-[8px] text-red-500 font-black uppercase ml-2">{cardErrors.number}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Expiration</label>
+                        <input 
+                          type="text" 
+                          placeholder="MM/AA"
+                          className={`w-full px-6 py-4 bg-white border rounded-2xl text-sm font-bold focus:outline-none transition-all ${cardErrors.expiry ? 'border-red-500' : 'border-slate-200'}`}
+                          value={cardDetails.expiry}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/\D/g, '');
+                            if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2, 4);
+                            setCardDetails({...cardDetails, expiry: val.slice(0, 5)});
+                          }}
+                        />
+                        {cardErrors.expiry && <p className="text-[8px] text-red-500 font-black uppercase ml-2">{cardErrors.expiry}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">CVC</label>
+                        <input 
+                          type="password" 
+                          placeholder="***"
+                          maxLength={3}
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none"
+                          value={cardDetails.cvc}
+                          onChange={(e) => setCardDetails({...cardDetails, cvc: e.target.value.replace(/\D/g, '')})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 bg-blue-50 rounded-[3rem] border border-blue-100 text-center space-y-2">
+                    <p className="text-sm font-bold text-blue-900 italic">"Vous vous apprêtez à acquérir {quantity} tokens de {selectedToken.cropType}. Vos fonds seront placés sous séquestre SGG."</p>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                    <div className="flex justify-between items-center text-xs font-black uppercase text-slate-400 px-2">
@@ -162,7 +231,7 @@ const Marketplace: React.FC = () => {
                   {isProcessing ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      INITIALISATION USSD...
+                      {paymentMethod === 'CARD' ? 'VALIDATION BANCAIRE...' : 'INITIALISATION USSD...'}
                     </>
                   ) : (
                     <>🚀 PAYER {totalCost.toLocaleString()} XAF</>

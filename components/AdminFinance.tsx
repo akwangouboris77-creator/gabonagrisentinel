@@ -15,11 +15,17 @@ const chartData = [
 
 const AdminFinance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ENTITIES' | 'PAYOUTS' | 'FUNDRAISING' | 'PARTNERSHIP'>('OVERVIEW');
+  const [searchQuery, setSearchQuery] = useState('');
   const [investors] = useState<Investor[]>(() => [
     { id: 'FGIS-001', name: 'Fonds Gabonais d\'Investissements Stratégiques', type: 'INSTITUTIONAL', joinedDate: '12/01/2026', totalInvested: 1200000000, status: 'ACTIVE' },
     { id: 'BGFI-002', name: 'BGFIBank Gabon S.A.', type: 'INSTITUTIONAL', joinedDate: '01/03/2026', totalInvested: 500000000, status: 'ACTIVE' },
     { id: 'BECEG-003', name: 'BECEG - Banque d\'État', type: 'INSTITUTIONAL', joinedDate: '20/02/2026', totalInvested: 0, status: 'PENDING' },
   ]);
+
+  const filteredInvestors = investors.filter(inv => 
+    inv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inv.status.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -100,6 +106,67 @@ const AdminFinance: React.FC = () => {
                   <Area type="monotone" dataKey="api" stackId="1" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorApi)" />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'ENTITIES' && (
+        <div className="space-y-8 animate-in slide-in-from-bottom-6">
+          <div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-white">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight italic">🏛️ Registre des Investisseurs & Acteurs</h3>
+              <div className="relative w-full md:w-96">
+                <input 
+                  type="text" 
+                  placeholder="Rechercher par nom ou statut..."
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[2.5rem] border border-slate-100">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="p-6 text-[10px] font-black text-slate-400 uppercase">ID / Nom</th>
+                    <th className="p-6 text-[10px] font-black text-slate-400 uppercase">Type</th>
+                    <th className="p-6 text-[10px] font-black text-slate-400 uppercase">Investi</th>
+                    <th className="p-6 text-[10px] font-black text-slate-400 uppercase">Statut</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredInvestors.map(inv => (
+                    <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-6">
+                        <p className="text-sm font-black text-slate-800">{inv.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{inv.id} • Inscrit le {inv.joinedDate}</p>
+                      </td>
+                      <td className="p-6">
+                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${inv.type === 'INSTITUTIONAL' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                          {inv.type}
+                        </span>
+                      </td>
+                      <td className="p-6 text-sm font-black text-slate-800">{inv.totalInvested.toLocaleString()} XAF</td>
+                      <td className="p-6">
+                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${inv.status === 'ACTIVE' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredInvestors.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-20 text-center opacity-20 italic font-black uppercase tracking-widest">
+                        Aucun résultat trouvé
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
