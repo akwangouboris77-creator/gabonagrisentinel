@@ -17,6 +17,9 @@ const ProducerHub: React.FC = () => {
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [myAssets, setMyAssets] = useState<DBAsset[]>([]);
+  const [selectedAsset, setSelectedAsset] = useState<DBAsset | null>(null);
+  const [subPaymentMethod, setSubPaymentMethod] = useState<'MOBILE' | 'CARD'>('MOBILE');
+  const [cardData, setCardData] = useState({ number: '', expiry: '' });
 
   useEffect(() => {
     if (isCertified) {
@@ -71,6 +74,15 @@ const ProducerHub: React.FC = () => {
     }, 2000);
   };
 
+  const handleSellTokens = () => {
+    setToast("Ouverture du terminal de tokenisation... (Bientôt disponible)");
+  };
+
+  const handleAssetClick = (asset: DBAsset) => {
+    setSelectedAsset(asset);
+    setToast(`Consultation de l'actif ${asset.id}...`);
+  };
+
   const handleVerifyAgreement = () => {
     setIsProcessing('AGREEMENT_SCAN');
     setScanMessage("Initialisation du scanner optique...");
@@ -99,6 +111,10 @@ const ProducerHub: React.FC = () => {
   };
 
   const executeSubscription = () => {
+    if (subPaymentMethod === 'CARD' && (!cardData.number || !cardData.expiry)) {
+      setToast("Veuillez saisir vos coordonnées bancaires.");
+      return;
+    }
     setIsProcessing('PAYMENT');
     setTimeout(() => {
       setIsProcessing(null);
@@ -188,6 +204,15 @@ const ProducerHub: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+      
+      <div className="bg-blue-50 p-8 rounded-[3rem] border border-blue-100">
+         <h4 className="text-xs font-black text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+           <span className="w-2 h-2 bg-blue-500 rounded-full"></span> Note sur les Frais de Transaction
+         </h4>
+         <p className="text-sm text-blue-700 leading-relaxed font-medium italic">
+           En dehors de l'abonnement mensuel, chaque transaction blockchain (tokenisation, vente, audit certifié) engendre un frais de réseau fixe de **150 XAF**. Ces frais sont automatiquement déduits de votre portefeuille G-AS ou ajoutés à votre facture mensuelle.
+         </p>
       </div>
     </div>
   );
@@ -358,12 +383,31 @@ const ProducerHub: React.FC = () => {
                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Montant Mensuel</span>
                    <span className="text-xl font-black text-slate-800">{selectedPlan.price.toLocaleString()} XAF</span>
                 </div>
-                <div className="space-y-2 border-t border-slate-200 pt-4">
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mode de paiement</p>
-                   <div className="flex gap-4">
-                      <div className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black">AIRTEL MONEY</div>
-                      <div className="px-4 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black">MOOV MONEY</div>
+                <div className="space-y-4 border-t border-slate-200 pt-4">
+                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mode de règlement</p>
+                   <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => setSubPaymentMethod('MOBILE')} className={`px-4 py-3 rounded-xl text-[10px] font-black transition-all ${subPaymentMethod === 'MOBILE' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>MOBILE MONEY</button>
+                      <button onClick={() => setSubPaymentMethod('CARD')} className={`px-4 py-3 rounded-xl text-[10px] font-black transition-all ${subPaymentMethod === 'CARD' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>CARTE BANCAIRE</button>
                    </div>
+                   
+                   {subPaymentMethod === 'CARD' && (
+                     <div className="space-y-3 animate-in slide-in-from-top-2">
+                        <input 
+                          type="text" 
+                          placeholder="Numéro de Carte" 
+                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          value={cardData.number}
+                          onChange={(e) => setCardData({...cardData, number: e.target.value})}
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="MM/AA" 
+                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                          value={cardData.expiry}
+                          onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
+                        />
+                     </div>
+                   )}
                 </div>
              </div>
 
@@ -375,6 +419,45 @@ const ProducerHub: React.FC = () => {
                 {isProcessing === 'PAYMENT' ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'VALIDER & PAYER'}
              </button>
              <button onClick={() => setShowPayModal(false)} className="w-full text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-colors">Annuler</button>
+          </div>
+        </div>
+      )}
+
+      {selectedAsset && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+          <div className="bg-white w-full max-w-lg rounded-[3.5rem] p-12 shadow-2xl space-y-8 border border-white relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
+             <button onClick={() => setSelectedAsset(null)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-800 transition-colors">✕</button>
+             
+             <div className="text-center">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-2">Détails de l'Actif Certifié</p>
+                <h3 className="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">{selectedAsset.type}</h3>
+                <p className="text-[9px] text-green-600 font-black uppercase tracking-widest mt-1 italic">ID: {selectedAsset.id}</p>
+             </div>
+
+             <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Localisation</p>
+                   <p className="text-xs font-black text-slate-800">{selectedAsset.location}</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Quantité / Surface</p>
+                   <p className="text-xs font-black text-slate-800">{selectedAsset.area || selectedAsset.count + ' têtes'}</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Valeur Estimée</p>
+                   <p className="text-xs font-black text-green-600">{selectedAsset.collateralValue}</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Statut SGG</p>
+                   <p className="text-xs font-black text-blue-600 italic uppercase">AUDITÉ ✓</p>
+                </div>
+             </div>
+
+             <div className="space-y-4">
+                <button onClick={() => { setSelectedAsset(null); handleDroneRequest(); }} className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all">Re-Scanner l'Actif</button>
+                <button onClick={() => { setSelectedAsset(null); handleSellTokens(); }} className="w-full py-5 bg-green-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all">Tokeniser cet Actif</button>
+             </div>
           </div>
         </div>
       )}
@@ -404,7 +487,11 @@ const ProducerHub: React.FC = () => {
                   </div>
                   <div className="space-y-4">
                     {myAssets.length > 0 ? myAssets.map(asset => (
-                      <div key={asset.id} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-pointer">
+                      <div 
+                        key={asset.id} 
+                        onClick={() => handleAssetClick(asset)}
+                        className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-pointer"
+                      >
                         <div className="flex gap-8 items-center">
                           <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">{asset.type === 'MANIOC' || asset.type === 'BANANE' ? '🌾' : '🐄'}</div>
                           <div>
@@ -430,7 +517,7 @@ const ProducerHub: React.FC = () => {
                      <button onClick={handleDroneRequest} disabled={isProcessing === 'DRONE'} className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 justify-center hover:bg-slate-100 transition-all active:scale-95">
                         {isProcessing === 'DRONE' ? <div className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div> : '🚁 SCAN DRONE'}
                      </button>
-                     <button className="w-full py-5 bg-green-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-green-500 transition-all">💰 VENDRE TOKENS</button>
+                     <button onClick={handleSellTokens} className="w-full py-5 bg-green-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-green-500 transition-all active:scale-95">💰 VENDRE TOKENS</button>
                   </div>
                 </div>
 

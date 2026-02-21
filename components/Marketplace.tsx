@@ -219,7 +219,11 @@ const Marketplace: React.FC = () => {
                    </div>
                    <div className="flex justify-between items-center text-xs font-black uppercase text-slate-400 px-2">
                       <span>Frais Blockchain</span>
-                      <span className="text-green-600">0 XAF (Subventionné)</span>
+                      <span className="text-blue-600">150 XAF (Frais de Gaz)</span>
+                   </div>
+                   <div className="flex justify-between items-center text-sm font-black uppercase text-slate-900 px-2 pt-2 border-t border-slate-100">
+                      <span>Total Final</span>
+                      <span>{(totalCost + 150).toLocaleString()} XAF</span>
                    </div>
                 </div>
 

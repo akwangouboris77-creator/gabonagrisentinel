@@ -11,6 +11,7 @@ const mockTxs: BlockchainTx[] = [
 
 const BlockchainTracker: React.FC = () => {
   const [txs, setTxs] = useState(mockTxs);
+  const [selectedTx, setSelectedTx] = useState<BlockchainTx | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,7 +29,47 @@ const BlockchainTracker: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700 relative">
+      {selectedTx && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl animate-in fade-in">
+          <div className="bg-slate-900 w-full max-w-lg rounded-[3.5rem] p-12 shadow-2xl space-y-8 border border-white/10 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
+             <button onClick={() => setSelectedTx(null)} className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors">✕</button>
+             
+             <div className="text-center">
+                <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.4em] mb-2">Preuve de Validité Blockchain</p>
+                <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">{selectedTx.type.replace('_', ' ')}</h3>
+                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-1 italic">ID: {selectedTx.id}</p>
+             </div>
+
+             <div className="space-y-4">
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                   <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Hash de Transaction</p>
+                   <p className="text-xs font-mono text-green-400 break-all">{selectedTx.hash}f7e8a9b0c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                      <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Horodatage</p>
+                      <p className="text-xs font-black text-white">{selectedTx.timestamp}</p>
+                   </div>
+                   <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                      <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Statut Réseau</p>
+                      <p className="text-xs font-black text-green-500 italic uppercase">{selectedTx.status} ✓</p>
+                   </div>
+                </div>
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                   <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Détails de l'Événement</p>
+                   <p className="text-xs font-medium text-slate-300 italic leading-relaxed">"{selectedTx.details}"</p>
+                </div>
+             </div>
+
+             <div className="pt-4">
+                <button onClick={() => setSelectedTx(null)} className="w-full py-5 bg-white text-slate-900 rounded-[2rem] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all">Fermer l'Explorateur</button>
+             </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-slate-950 p-8 rounded-[2.5rem] border border-green-500/20 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
         
@@ -46,7 +87,11 @@ const BlockchainTracker: React.FC = () => {
 
         <div className="space-y-3">
           {txs.map((tx) => (
-            <div key={tx.id} className="group bg-slate-900/50 hover:bg-slate-900 border border-white/5 hover:border-green-500/30 p-5 rounded-2xl transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div 
+              key={tx.id} 
+              onClick={() => setSelectedTx(tx)}
+              className="group bg-slate-900/50 hover:bg-slate-900 border border-white/5 hover:border-green-500/30 p-5 rounded-2xl transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer active:scale-[0.98]"
+            >
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
                   tx.type === 'VALIDATION_DRONE' ? 'bg-blue-500/20 text-blue-400' :
