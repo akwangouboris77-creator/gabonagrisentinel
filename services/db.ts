@@ -36,7 +36,7 @@ export interface DBLedgerEntry {
 
 export interface DBAsset {
   id: string;
-  type: 'MANIOC' | 'BANANE' | 'BOVIN' | 'VOLAILLE';
+  type: string; // Manioc, Banane, Cacao, Hévéa, etc.
   status: 'SAIN' | 'ALERTE' | 'STABLE';
   area?: string;
   count?: number;
@@ -44,7 +44,9 @@ export interface DBAsset {
   owner?: string;
   maturity?: number; // % de maturité pour les acheteurs
   estimatedYield?: number; // tonnes estimées
+  harvestDate?: string;
   pricePerTon?: number;
+  collateralValue?: string; // Valeur de garantie numérique
 }
 
 export interface DBOrder {

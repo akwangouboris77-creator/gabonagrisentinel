@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BlockchainTx } from '../types';
+import DataFlowSchema from './DataFlowSchema';
 
 const mockTxs: BlockchainTx[] = [
   { id: 'TX-9921', timestamp: 'Il y a 2m', type: 'VALIDATION_DRONE', details: 'Ferme Akanda : Preuve de vie validée (Manioc)', hash: '0x77a...2b1', status: 'CONFIRMED' },
@@ -30,7 +31,8 @@ const BlockchainTracker: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 relative">
-      {selectedTx && (
+      <div id="blockchain-content" className="space-y-6">
+        {selectedTx && (
         <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl animate-in fade-in">
           <div className="bg-slate-900 w-full max-w-lg rounded-[3.5rem] p-12 shadow-2xl space-y-8 border border-white/10 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
@@ -119,11 +121,53 @@ const BlockchainTracker: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-white/5 text-center">
-          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
-            La technologie Blockchain garantit qu'aucune donnée de récolte ne peut être falsifiée.
-          </p>
+          <div className="flex items-center justify-between mb-8">
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
+              La technologie Blockchain garantit qu'aucune donnée de récolte ne peut être falsifiée.
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => {
+                  const mermaidCode = `graph LR
+    A[🛰️ CAPTURE] -->|Preuve de Vie| B[🧠 VALIDATION]
+    B -->|Audit IA & Consensus| C[⛓️ REGISTRE]
+    C -->|Hachage Inaltérable| D[💎 VALEUR]`;
+                  navigator.clipboard.writeText(mermaidCode);
+                  alert("Code Mermaid copié !");
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-widest flex items-center gap-2"
+              >
+                📋 Copier Mermaid
+              </button>
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('blockchain-content');
+                  // @ts-ignore
+                  if (typeof html2pdf !== 'undefined' && element) {
+                    const opt = {
+                      margin: 10,
+                      filename: 'Registre_National_Blockchain_Agri_Sentinel.pdf',
+                      image: { type: 'jpeg', quality: 0.98 },
+                      html2canvas: { scale: 2 },
+                      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    // @ts-ignore
+                    html2pdf().set(opt).from(element).save();
+                  } else {
+                    window.print();
+                  }
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black text-slate-400 hover:text-white transition-all uppercase tracking-widest flex items-center gap-2"
+              >
+                📥 Exporter PDF
+              </button>
+            </div>
+          </div>
+
+          <DataFlowSchema />
         </div>
       </div>
+    </div>
     </div>
   );
 };

@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { dbService, DBAsset, DBOrder } from '../services/db';
+import { useNotification } from './NotificationProvider';
 
 const BuyerHub: React.FC = () => {
+  const { showNotification } = useNotification();
   const [assets, setAssets] = useState<DBAsset[]>([]);
   const [orders, setOrders] = useState<DBOrder[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<DBAsset | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'EXPLORE' | 'MY_ORDERS'>('EXPLORE');
-  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -42,16 +43,11 @@ const BuyerHub: React.FC = () => {
     await loadData();
     setIsProcessing(false);
     setSelectedAsset(null);
-    setToast(`Réservation confirmée ! ${totalToPay.toLocaleString()} XAF payés en avance pour ${asset.id}. Remise de 10% appliquée.`);
+    showNotification(`Réservation confirmée ! ${totalToPay.toLocaleString()} XAF payés en avance pour ${asset.id}. Remise de 10% appliquée.`, "success", 5000);
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[5000] bg-slate-900 text-white px-8 py-4 rounded-[2rem] shadow-2xl border border-green-500 font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-top-10 flex items-center gap-3">
-          <span className="text-xl">🛡️</span> {toast}
-        </div>
-      )}
 
       {/* Hero Centrale d'Achat */}
       <div className="bg-slate-900 rounded-[3.5rem] p-12 text-white relative overflow-hidden shadow-2xl border border-white/10">

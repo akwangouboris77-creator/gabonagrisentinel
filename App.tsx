@@ -11,11 +11,14 @@ import SGGPortal from './components/SGGPortal';
 import BlockchainTracker from './components/BlockchainTracker';
 import AdminFinance from './components/AdminFinance';
 import MediaKit from './components/MediaKit';
+import BusinessPlan from './components/BusinessPlan';
 import LiveAssistant from './components/LiveAssistant';
 import AuthGateway from './components/AuthGateway';
 import BuyerHub from './components/BuyerHub';
+import UserGuide from './components/UserGuide';
 import { dbService } from './services/db';
 import { Language, t } from './services/i18n';
+import { NotificationProvider } from './components/NotificationProvider';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,6 +70,8 @@ const App: React.FC = () => {
       case View.ADMIN_FINANCE: return <AdminFinance lang={language} />;
       case View.MEDIA_KIT: return <MediaKit lang={language} />;
       case View.BUYER_HUB: return <BuyerHub lang={language} />;
+      case View.BUSINESS_PLAN: return <BusinessPlan lang={language} />;
+      case View.USER_GUIDE: return <UserGuide lang={language} />;
       default: return <Dashboard lang={language} />;
     }
   };
@@ -79,10 +84,15 @@ const App: React.FC = () => {
     setIsSidebarOpen(false);
   };
 
-  if (!isAuthenticated) return <AuthGateway onLogin={handleLogin} lang={language} setLang={setLanguage} />;
+  if (!isAuthenticated) return (
+    <NotificationProvider>
+      <AuthGateway onLogin={handleLogin} lang={language} setLang={setLanguage} />
+    </NotificationProvider>
+  );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <NotificationProvider>
+      <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar 
         currentView={currentView} onNavigate={handleNavigate} isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} userRole={userRole} onLogout={handleLogout}
@@ -124,6 +134,7 @@ const App: React.FC = () => {
         <LiveAssistant lang={language} />
       </main>
     </div>
+    </NotificationProvider>
   );
 };
 

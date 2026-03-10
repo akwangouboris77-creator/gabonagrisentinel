@@ -9,7 +9,9 @@ export enum View {
   BLOCKCHAIN = 'BLOCKCHAIN',
   ADMIN_FINANCE = 'ADMIN_FINANCE',
   MEDIA_KIT = 'MEDIA_KIT',
-  BUYER_HUB = 'BUYER_HUB'
+  BUYER_HUB = 'BUYER_HUB',
+  BUSINESS_PLAN = 'BUSINESS_PLAN',
+  USER_GUIDE = 'USER_GUIDE'
 }
 
 export interface CropHealthData {
@@ -86,4 +88,13 @@ export interface BlockchainTx {
   details: string;
   hash: string;
   status: 'CONFIRMED' | 'PENDING';
+}
+
+declare global {
+  interface Window {
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
+  }
 }

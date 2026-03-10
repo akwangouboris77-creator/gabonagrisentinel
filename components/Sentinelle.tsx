@@ -1,19 +1,20 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { analyzeCropHealth, generateSyntheticDroneView } from '../services/geminiService';
+import { useNotification } from './NotificationProvider';
 
 type ScanMode = 'RGB' | 'THERMAL' | 'NDVI' | 'LIVESTOCK';
 type Weather = 'SOLEIL' | 'PLUIE' | 'BRUME' | 'ORAGE';
 type GrowthStage = 'SEMIS' | 'VÉGÉTATIF' | 'FLORAISON' | 'RÉCOLTE';
 
 const Sentinelle: React.FC = () => {
+  const { showNotification } = useNotification();
   const [analyzing, setAnalyzing] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [certifying, setCertifying] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [mode, setMode] = useState<ScanMode>('RGB');
-  const [toast, setToast] = useState<string | null>(null);
   
   // Simulation params
   const [weather, setWeather] = useState<Weather>('SOLEIL');
@@ -22,13 +23,6 @@ const Sentinelle: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -36,7 +30,7 @@ const Sentinelle: React.FC = () => {
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
         setResult(null); // Reset result for the new image
-        setToast("Image importée avec succès. Prête pour le diagnostic IA.");
+        showNotification("Image importée avec succès. Prête pour le diagnostic IA.", "success");
       };
       reader.readAsDataURL(file);
     }
@@ -84,7 +78,7 @@ const Sentinelle: React.FC = () => {
     setCertifying(true);
     setTimeout(() => {
       setCertifying(false);
-      setToast(`Certificat Blockchain émis pour Scan ID #${Math.floor(Math.random()*100000)}. Données inaltérables.`);
+      showNotification(`Certificat Blockchain émis pour Scan ID #${Math.floor(Math.random()*100000)}. Données inaltérables.`, "success", 5000);
     }, 2500);
   };
 
@@ -99,11 +93,6 @@ const Sentinelle: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in duration-700 pb-20 relative">
-      {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[5000] bg-green-600 text-white px-8 py-4 rounded-[2rem] shadow-2xl border border-green-400 font-black text-xs uppercase tracking-widest animate-in slide-in-from-top-10 flex items-center gap-3">
-          <span>⛓️</span> {toast}
-        </div>
-      )}
       
       <div className="lg:col-span-1 space-y-6">
         <div className="bg-slate-900 p-8 rounded-[3rem] shadow-2xl border border-white/5 text-white">
@@ -123,6 +112,10 @@ const Sentinelle: React.FC = () => {
                 <option value="Banane">Banane Plantain</option>
                 <option value="Hévéa">Hévéa (Bitam)</option>
                 <option value="Cacao">Cacao (Woleu-Ntem)</option>
+                <option value="Café">Café (Ogooué-Ivindo)</option>
+                <option value="Palmier">Palmier à Huile (Lambaréné)</option>
+                <option value="Maïs">Maïs (Ngounié)</option>
+                <option value="Arachide">Arachide (Nyanga)</option>
               </select>
             </div>
 
@@ -298,6 +291,19 @@ const Sentinelle: React.FC = () => {
                 <p className="text-6xl font-black text-slate-800 tracking-tighter relative z-10">{result.healthScore}%</p>
                 <div className="mt-6 w-full h-1.5 bg-slate-200 rounded-full overflow-hidden relative z-10">
                   <div className="h-full bg-green-500 shadow-lg shadow-green-500/50 transition-all duration-1000" style={{ width: `${result.healthScore}%` }}></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-5 bg-blue-50 rounded-3xl border border-blue-100">
+                  <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Rendement Estimé</p>
+                  <p className="text-lg font-black text-blue-900 tracking-tight">{result.estimatedYield} <span className="text-[10px]">T/HA</span></p>
+                  <p className="text-[8px] text-blue-400 font-bold uppercase mt-1">Récolte: {result.harvestDate}</p>
+                </div>
+                <div className="p-5 bg-amber-50 rounded-3xl border border-amber-100">
+                  <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-1">Garantie Numérique</p>
+                  <p className="text-lg font-black text-amber-900 tracking-tight">{result.financialGuarantee?.toLocaleString()} <span className="text-[10px]">XAF</span></p>
+                  <p className="text-[8px] text-amber-500 font-bold uppercase mt-1">SGG Certifié ✓</p>
                 </div>
               </div>
               

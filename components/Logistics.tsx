@@ -4,8 +4,10 @@ import * as L from 'leaflet';
 import { TruckRoute } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import { dbService } from '../services/db';
+import { useNotification } from './NotificationProvider';
 
 const Logistics: React.FC = () => {
+  const { showNotification } = useNotification();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
@@ -97,7 +99,7 @@ const Logistics: React.FC = () => {
       
       setEnrolling(false);
       setShowEnrollment(false);
-      setAiInsight(`Nouveau transporteur "${newDriver.name}" enrôlé. Balise IoT Active. État matériel: OPTIMAL.`);
+      showNotification(`Nouveau transporteur "${newDriver.name}" enrôlé. Balise IoT Active. État matériel: OPTIMAL.`, "success");
     }, 2000);
   };
 
@@ -112,8 +114,10 @@ const Logistics: React.FC = () => {
         Suggère des points de ravitaillement stratégiques et des alertes de maintenance.`
       });
       setAiInsight(response.text);
+      showNotification("Audit IoT terminé. Nouvelles recommandations disponibles.", "info");
     } catch {
       setAiInsight("Optimisation IA : R-102 nécessite ravitaillement à Oyem sous 45km. Soute frigo stable à 4.2°C. Trajet prioritaire pour chaîne du froid.");
+      showNotification("Audit IoT terminé (Mode Secours).", "info");
     } finally {
       setIsOptimizing(false);
     }
@@ -202,7 +206,10 @@ const Logistics: React.FC = () => {
                   </div>
 
                   <button 
-                    onClick={() => setReserved(prev => [...prev, route.id])}
+                    onClick={() => {
+                      setReserved(prev => [...prev, route.id]);
+                      showNotification(`Lot assigné au véhicule ${route.id}. Tracking activé.`, "success");
+                    }}
                     disabled={reserved.includes(route.id)}
                     className={`px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.1em] shadow-xl transition-all shrink-0 ${reserved.includes(route.id) ? 'bg-slate-200 text-slate-400' : 'bg-slate-900 text-white hover:bg-slate-800 hover:scale-105 active:scale-95'}`}
                   >

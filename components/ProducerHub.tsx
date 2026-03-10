@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { dbService, DBAsset } from '../services/db';
+import { useNotification } from './NotificationProvider';
 
 type Step = 'WELCOME' | 'PROFILE' | 'AGREEMENT' | 'LOCATION' | 'EQUIPMENT' | 'FINISH';
 type HubTab = 'ASSETS' | 'SUBSCRIPTION' | 'FINANCE';
 
 const ProducerHub: React.FC = () => {
+  const { showNotification } = useNotification();
   const [step, setStep] = useState<Step>('WELCOME');
   const [activeTab, setActiveTab] = useState<HubTab>('ASSETS');
   const [userProfile, setUserProfile] = useState<'AGRI' | 'LIVESTOCK' | null>(null);
   const [isCertified, setIsCertified] = useState(false);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [agreementVerified, setAgreementVerified] = useState(false);
   const [scanMessage, setScanMessage] = useState("");
   const [showPayModal, setShowPayModal] = useState(false);
@@ -31,13 +32,6 @@ const ProducerHub: React.FC = () => {
     const assets = await dbService.getAssets();
     setMyAssets(assets);
   };
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   const pricingPlans = [
     { 
@@ -70,17 +64,17 @@ const ProducerHub: React.FC = () => {
     setIsProcessing('DRONE');
     setTimeout(() => {
       setIsProcessing(null);
-      setToast("Demande de drone enregistrée. Survol prévu dans les 12h.");
+      showNotification("Demande de drone enregistrée. Survol prévu dans les 12h.", "info");
     }, 2000);
   };
 
   const handleSellTokens = () => {
-    setToast("Ouverture du terminal de tokenisation... (Bientôt disponible)");
+    showNotification("Ouverture du terminal de tokenisation... (Bientôt disponible)", "info");
   };
 
   const handleAssetClick = (asset: DBAsset) => {
     setSelectedAsset(asset);
-    setToast(`Consultation de l'actif ${asset.id}...`);
+    showNotification(`Consultation de l'actif ${asset.id}...`, "info");
   };
 
   const handleVerifyAgreement = () => {
@@ -101,7 +95,7 @@ const ProducerHub: React.FC = () => {
     setTimeout(() => {
       setIsProcessing(null);
       setAgreementVerified(true);
-      setToast("Agrément PME Authentifié ✓");
+      showNotification("Agrément PME Authentifié ✓", "success");
     }, 4000);
   };
 
@@ -112,14 +106,14 @@ const ProducerHub: React.FC = () => {
 
   const executeSubscription = () => {
     if (subPaymentMethod === 'CARD' && (!cardData.number || !cardData.expiry)) {
-      setToast("Veuillez saisir vos coordonnées bancaires.");
+      showNotification("Veuillez saisir vos coordonnées bancaires.", "alert");
       return;
     }
     setIsProcessing('PAYMENT');
     setTimeout(() => {
       setIsProcessing(null);
       setShowPayModal(false);
-      setToast(`Abonnement ${selectedPlan.name} activé. Infrastructure mobilisée.`);
+      showNotification(`Abonnement ${selectedPlan.name} activé. Infrastructure mobilisée.`, "success");
     }, 2500);
   };
 
@@ -241,7 +235,17 @@ const ProducerHub: React.FC = () => {
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Type de Production</label>
                  <select className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none appearance-none cursor-pointer hover:bg-slate-100 transition-colors">
                     {userProfile === 'AGRI' ? (
-                      <><option>Manioc</option><option>Banane Plantain</option><option>Maraîchage</option></>
+                      <>
+                         <option>Manioc (Cassava)</option>
+                         <option>Banane Plantain</option>
+                         <option>Hévéa (Rubber)</option>
+                         <option>Cacao (Cocoa)</option>
+                         <option>Café</option>
+                         <option>Palmier à Huile</option>
+                         <option>Maïs</option>
+                         <option>Arachide</option>
+                         <option>Maraîchage</option>
+                       </>
                     ) : (
                       <><option>Bovins (Viande)</option><option>Porcins</option><option>Volaille</option></>
                     )}
@@ -445,12 +449,14 @@ const ProducerHub: React.FC = () => {
                    <p className="text-xs font-black text-slate-800">{selectedAsset.area || selectedAsset.count + ' têtes'}</p>
                 </div>
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Valeur Estimée</p>
-                   <p className="text-xs font-black text-green-600">{selectedAsset.collateralValue}</p>
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Rendement Estimé</p>
+                   <p className="text-xs font-black text-blue-600">{selectedAsset.estimatedYield || '45'} T/HA</p>
+                    <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Récolte: {selectedAsset.harvestDate || 'Juin 2026'}</p>
                 </div>
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Statut SGG</p>
-                   <p className="text-xs font-black text-blue-600 italic uppercase">AUDITÉ ✓</p>
+                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Garantie Numérique</p>
+                   <p className="text-xs font-black text-green-600">{selectedAsset.collateralValue || '2,500,000 XAF'}</p>
+                    <p className="text-[7px] text-blue-600 font-bold uppercase mt-1 italic">SGG Certifié ✓</p>
                 </div>
              </div>
 
@@ -538,12 +544,6 @@ const ProducerHub: React.FC = () => {
           {activeTab === 'SUBSCRIPTION' && renderSubscription()}
         </div>
       ) : (step === 'WELCOME' ? renderWelcome() : renderOnboarding())}
-      
-      {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[5000] bg-green-600 text-white px-8 py-4 rounded-[2rem] shadow-2xl border border-green-400 font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-top-10 flex items-center gap-3">
-          <span>⛓️</span> {toast}
-        </div>
-      )}
     </div>
   );
 };

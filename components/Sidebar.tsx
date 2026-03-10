@@ -24,6 +24,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onCl
     { id: View.SGG_PORTAL, label: t('sgg_portal', lang), icon: '🛡️', roles: ['BANKER'] },
     { id: View.BLOCKCHAIN, label: t('blockchain', lang), icon: '⛓️', roles: ['PRODUCER', 'INVESTOR', 'BANKER', 'BUYER'] },
     { id: View.MEDIA_KIT, label: t('media_kit', lang), icon: '🏢', roles: ['INVESTOR', 'PRODUCER', 'BUYER'] },
+    { id: View.BUSINESS_PLAN, label: t('business_plan', lang), icon: '📄', roles: ['BANKER', 'INVESTOR', 'PRODUCER'] },
+    { id: View.USER_GUIDE, label: t('user_guide', lang), icon: '📖', roles: ['PRODUCER', 'INVESTOR', 'BANKER', 'BUYER'] },
   ];
 
   const filteredItems = navItems.filter(item => userRole && item.roles.includes(userRole));

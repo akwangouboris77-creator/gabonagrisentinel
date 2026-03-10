@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
-// Fix: Removed the undefined 'Provider' member from the import list
 import { Investor } from '../types';
+import { useNotification } from './NotificationProvider';
 
 const chartData = [
   { name: 'Jan', commissions: 1200000, saas: 800000, api: 2500000, total: 4500000 },
@@ -14,6 +14,7 @@ const chartData = [
 ];
 
 const AdminFinance: React.FC = () => {
+  const { showNotification } = useNotification();
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ENTITIES' | 'PAYOUTS' | 'FUNDRAISING' | 'PARTNERSHIP'>('OVERVIEW');
   const [searchQuery, setSearchQuery] = useState('');
   const [investors] = useState<Investor[]>(() => [
@@ -52,7 +53,14 @@ const AdminFinance: React.FC = () => {
         {(['OVERVIEW', 'ENTITIES', 'PAYOUTS', 'FUNDRAISING', 'PARTNERSHIP'] as const).map(tab => (
           <button 
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab);
+              if (tab === 'PARTNERSHIP') {
+                showNotification("Accès aux données confidentielles BECEG. Session auditée.", "alert");
+              } else {
+                showNotification(`Vue ${tab} chargée.`, "info", 2000);
+              }
+            }}
             className={`px-6 md:px-8 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:text-slate-800'}`}
           >
             {tab === 'OVERVIEW' ? '📊 Trésorerie' : tab === 'ENTITIES' ? '🏛️ Acteurs' : tab === 'PAYOUTS' ? '💸 Règlements' : tab === 'FUNDRAISING' ? '🏦 Financement PAT' : '🤝 Dossier BECEG'}

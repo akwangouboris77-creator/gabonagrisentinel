@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import DataFlowSchema from './DataFlowSchema';
 
 type AssetType = 'IMAGE' | 'VIDEO';
 
@@ -180,18 +181,43 @@ const MediaKit: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = () => {
+    const element = document.getElementById('mediakit-content');
+    // @ts-ignore
+    if (typeof html2pdf !== 'undefined' && element) {
+      const opt = {
+        margin: 10,
+        filename: 'Dossier_Investisseur_Agri_Sentinel.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      // @ts-ignore
+      html2pdf().set(opt).from(element).save();
+    } else {
+      window.print();
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      <div className="bg-slate-900 rounded-[3.5rem] p-12 text-white relative overflow-hidden shadow-2xl border border-white/10">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-500/10 blur-3xl rounded-full -mr-20 -mt-20"></div>
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="max-w-2xl text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4 tracking-tighter uppercase italic">KIT <span className="text-blue-500">BANQUES & INVESTISSEURS</span></h2>
-            <p className="text-slate-400 font-medium italic leading-relaxed">
-              Générez des visuels certifiés et des clips de preuve pour vos dossiers de financement (BGFIBank, BICIG, BGD). Démontrez la robustesse de votre exploitation par l'image de précision.
-            </p>
-          </div>
-          <div className="flex bg-white/5 p-1.5 rounded-[2rem] border border-white/10 backdrop-blur-md">
+      <div id="mediakit-content" className="space-y-10">
+        <div className="bg-slate-900 rounded-[3.5rem] p-12 text-white relative overflow-hidden shadow-2xl border border-white/10">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-500/10 blur-3xl rounded-full -mr-20 -mt-20"></div>
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="max-w-2xl text-center md:text-left">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4 tracking-tighter uppercase italic">KIT <span className="text-blue-500">BANQUES & INVESTISSEURS</span></h2>
+              <p className="text-slate-400 font-medium italic leading-relaxed">
+                Générez des visuels certifiés et des clips de preuve pour vos dossiers de financement (BGFIBank, BICIG, BGD). Démontrez la robustesse de votre exploitation par l'image de précision.
+              </p>
+              <button 
+                onClick={handleExportPDF}
+                className="mt-6 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              >
+                📥 Exporter Dossier PDF
+              </button>
+            </div>
+            <div className="flex bg-white/5 p-1.5 rounded-[2rem] border border-white/10 backdrop-blur-md">
             <button 
               onClick={() => setActiveTab('IMAGE')} 
               className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'IMAGE' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400'}`}
@@ -309,6 +335,11 @@ const MediaKit: React.FC = () => {
         </div>
       </div>
       
+      <div className="space-y-6">
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] ml-4 italic">Architecture de Confiance (Audit en Temps Réel)</h3>
+        <DataFlowSchema light />
+      </div>
+
       <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl border border-white/5">
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
          <div className="max-w-4xl">
@@ -331,6 +362,7 @@ const MediaKit: React.FC = () => {
             </div>
          </div>
       </div>
+    </div>
     </div>
   );
 };

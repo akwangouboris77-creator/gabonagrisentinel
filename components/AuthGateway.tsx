@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Language, t } from '../services/i18n';
+import { useNotification } from './NotificationProvider';
 
 interface AuthGatewayProps {
   onLogin: (role: 'PRODUCER' | 'INVESTOR' | 'BANKER' | 'BUYER') => void;
@@ -9,6 +10,7 @@ interface AuthGatewayProps {
 }
 
 const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin, lang, setLang }) => {
+  const { showNotification } = useNotification();
   const [selectedRole, setSelectedRole] = useState<'PRODUCER' | 'INVESTOR' | 'BANKER' | 'BUYER' | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [step, setStep] = useState<'SELECT' | 'IDENTIFY' | 'SUCCESS'>('SELECT');
@@ -20,9 +22,11 @@ const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin, lang, setLang }) => 
 
   const startVerification = () => {
     setIsVerifying(true);
+    showNotification(t('verifying', lang), "info", 2000);
     setTimeout(() => {
       setIsVerifying(false);
       setStep('SUCCESS');
+      showNotification(t('success_auth', lang), "success", 3000);
       setTimeout(() => {
         if (selectedRole) onLogin(selectedRole);
       }, 1500);

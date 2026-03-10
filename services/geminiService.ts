@@ -55,7 +55,11 @@ export const analyzeCropHealth = async (imageData: string, cropType: string) => 
       contents: {
         parts: [
           { inlineData: { data: imageData.split(',')[1], mimeType: 'image/jpeg' } },
-          { text: `AGRONOME MAJEUR DIAGNOSTIC: Analyse cette culture de ${cropType} au Gabon. Détecte la Mosaïque ou Cercosporiose. Donne un score NDVI et un plan d'action immédiat.` }
+          { text: `AGRONOME MAJEUR DIAGNOSTIC: Analyse cette culture de ${cropType} au Gabon. 
+          1. Identifie les pathologies spécifiques (Mosaïque, Cercosporiose, Swollen Shoot, etc.).
+          2. Estime précisément le rendement futur (tonnes/hectare).
+          3. Calcule la valeur de la garantie numérique pour le financement (XAF) basée sur les cours actuels au Gabon.
+          Donne un score NDVI et un plan d'action immédiat.` }
         ]
       },
       config: {
@@ -67,16 +71,28 @@ export const analyzeCropHealth = async (imageData: string, cropType: string) => 
             healthScore: { type: Type.NUMBER },
             detectedPathology: { type: Type.STRING },
             vulnerabilityIndex: { type: Type.STRING },
+            estimatedYield: { type: Type.NUMBER, description: "Rendement estimé en tonnes/ha" },
+            harvestDate: { type: Type.STRING, description: "Date de récolte estimée" },
+            financialGuarantee: { type: Type.NUMBER, description: "Valeur de la garantie numérique en XAF" },
             recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
             summary: { type: Type.STRING }
           },
-          required: ["healthScore", "detectedPathology", "vulnerabilityIndex", "recommendations", "summary"]
+          required: ["healthScore", "detectedPathology", "vulnerabilityIndex", "estimatedYield", "harvestDate", "financialGuarantee", "recommendations", "summary"]
         }
       }
     });
     return JSON.parse(sanitizeJSON(response.text));
   } catch (error) {
-    return { healthScore: 85, detectedPathology: "Saine", vulnerabilityIndex: "Basse", recommendations: ["Surveillance Starlink"], summary: "Vigueur végétale optimale détectée par Sentinelle." };
+    return { 
+      healthScore: 85, 
+      detectedPathology: "Saine", 
+      vulnerabilityIndex: "Basse", 
+      estimatedYield: 12.5,
+      harvestDate: "Juin 2026",
+      financialGuarantee: 2500000,
+      recommendations: ["Surveillance Starlink"], 
+      summary: "Vigueur végétale optimale détectée par Sentinelle." 
+    };
   }
 };
 

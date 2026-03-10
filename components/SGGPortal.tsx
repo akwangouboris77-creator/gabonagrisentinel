@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { dbService, DBCredit, DBTranche } from '../services/db';
+import { useNotification } from './NotificationProvider';
 
 const SGGPortal: React.FC = () => {
+  const { showNotification } = useNotification();
   const [activeView, setActiveView] = useState<'DOSSIERS' | 'COMPENSATIONS'>('DOSSIERS');
   const [isBankerAuthenticated, setIsBankerAuthenticated] = useState(false);
   const [bankerCredentials, setBankerCredentials] = useState({ matricule: '', code: '' });
@@ -11,7 +13,6 @@ const SGGPortal: React.FC = () => {
   const [automatedFees, setAutomatedFees] = useState<any[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const [toast, setToast] = useState<{msg: string, type: 'SUCCESS' | 'INFO'} | null>(null);
 
   useEffect(() => {
     if (isBankerAuthenticated) {
@@ -23,9 +24,9 @@ const SGGPortal: React.FC = () => {
     e.preventDefault();
     if (bankerCredentials.matricule.length > 3 && bankerCredentials.code.length > 3) {
       setIsBankerAuthenticated(true);
-      setToast({ msg: "Authentification BCEG réussie. Session sécurisée active.", type: 'SUCCESS' });
+      showNotification("Authentification BCEG réussie. Session sécurisée active.", "success");
     } else {
-      setToast({ msg: "Identifiants invalides. Veuillez vérifier votre matricule BCEG.", type: 'INFO' });
+      showNotification("Identifiants invalides. Veuillez vérifier votre matricule BCEG.", "alert");
     }
   };
 
@@ -36,18 +37,11 @@ const SGGPortal: React.FC = () => {
     setAutomatedFees(ledger);
   };
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const handleVerifyAsset = () => {
     setIsVerifying(true);
     setTimeout(() => {
       setIsVerifying(false);
-      setToast({ msg: "Audit Drone Multispectral validé. Le gage biologique est conforme aux exigences SGG.", type: 'INFO' });
+      showNotification("Audit Drone Multispectral validé. Le gage biologique est conforme aux exigences SGG.", "info");
     }, 2500);
   };
 
@@ -83,10 +77,7 @@ const SGGPortal: React.FC = () => {
     setSelectedInvestment(updatedInvestment);
     
     setIsPaying(false);
-    setToast({ 
-      msg: `DÉCAISSEMENT SPLIT PERSISTÉ : ${net.toLocaleString()} XAF au Producteur | ${fee.toLocaleString()} XAF à la plateforme.`, 
-      type: 'SUCCESS' 
-    });
+    showNotification(`DÉCAISSEMENT SPLIT PERSISTÉ : ${net.toLocaleString()} XAF au Producteur | ${fee.toLocaleString()} XAF à la plateforme.`, "success", 6000);
   };
 
   if (!isBankerAuthenticated) {
@@ -140,11 +131,6 @@ const SGGPortal: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 relative">
-      {toast && (
-        <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[5000] ${toast.type === 'SUCCESS' ? 'bg-green-600 border-green-400' : 'bg-blue-900 border-blue-400'} text-white px-8 py-4 rounded-[2rem] shadow-2xl border font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-top-10 flex items-center gap-3`}>
-          <span className="text-lg">{toast.type === 'SUCCESS' ? '💸' : '📡'}</span> {toast.msg}
-        </div>
-      )}
 
       {/* Header Statistique */}
       <div className="bg-slate-900 rounded-[3.5rem] p-12 text-white relative overflow-hidden shadow-2xl border border-white/10">

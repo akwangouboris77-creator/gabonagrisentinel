@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as L from 'leaflet';
 import { provinces } from '../data/provinces';
+import DataFlowSchema from './DataFlowSchema';
 
 interface StarlinkStats {
   latency: number;
@@ -217,6 +218,11 @@ const Dashboard: React.FC = () => {
               </div>
            </div>
         </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] ml-4 italic">Flux de Données Souverain (End-to-End)</h3>
+        <DataFlowSchema />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { FarmToken } from '../types';
+import { useNotification } from './NotificationProvider';
 
 const initialTokens: (FarmToken & { img: string, tags: string[], riskLevel: 'LOW' | 'MED' | 'HIGH' })[] = [
   { 
@@ -29,6 +30,7 @@ const initialTokens: (FarmToken & { img: string, tags: string[], riskLevel: 'LOW
 type PaymentMethod = 'AIRTEL' | 'MOOV' | 'WALLET' | 'BANK' | 'CARD';
 
 const Marketplace: React.FC = () => {
+  const { showNotification } = useNotification();
   const [role, setRole] = useState<'INVESTOR' | 'FARMER'>('INVESTOR');
   const [view, setView] = useState<'EXPLORE' | 'PORTFOLIO'>('EXPLORE');
   const [selectedToken, setSelectedToken] = useState<typeof initialTokens[0] | null>(null);
@@ -36,7 +38,6 @@ const Marketplace: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('AIRTEL');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'SELECT' | 'CONFIRM' | 'SUCCESS'>('SELECT');
-  const [notification, setNotification] = useState<{msg: string, type: 'success' | 'info'} | null>(null);
   
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvc: '' });
   const [cardErrors, setCardErrors] = useState({ number: '', expiry: '' });
@@ -77,11 +78,7 @@ const Marketplace: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 3000));
     setIsProcessing(false);
     setPaymentStep('SUCCESS');
-    setNotification({
-      msg: `Transaction Blockchain validée par BCEG. Vos tokens sont sécurisés.`,
-      type: 'success'
-    });
-    setTimeout(() => setNotification(null), 5000);
+    showNotification(`Transaction Blockchain validée par BCEG. Vos tokens sont sécurisés.`, "success", 5000);
   };
 
   const renderPaymentModal = () => {
@@ -280,13 +277,6 @@ const Marketplace: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 relative">
       {renderPaymentModal()}
       
-      {notification && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[10000] px-10 py-5 rounded-[2.5rem] shadow-2xl font-black text-xs animate-in slide-in-from-top-10 flex items-center gap-4 border backdrop-blur-xl ${notification.type === 'success' ? 'bg-green-600/90 border-green-400 text-white' : 'bg-blue-600/90 border-blue-400 text-white'}`}>
-          <span className="text-xl">{notification.type === 'success' ? '⛓️' : 'ℹ️'}</span>
-          <span className="uppercase tracking-widest leading-tight">{notification.msg}</span>
-        </div>
-      )}
-
       {/* Hero Section */}
       <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl border border-white/10">
         <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-green-500/10 to-transparent pointer-events-none"></div>
