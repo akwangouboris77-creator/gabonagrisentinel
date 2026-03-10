@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FarmToken } from '../types';
 import { useNotification } from './NotificationProvider';
+import { dbService, DBAsset } from '../services/db';
 
 const initialTokens: (FarmToken & { img: string, tags: string[], riskLevel: 'LOW' | 'MED' | 'HIGH' })[] = [
   { 
@@ -41,6 +42,30 @@ const Marketplace: React.FC = () => {
   
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvc: '' });
   const [cardErrors, setCardErrors] = useState({ number: '', expiry: '' });
+
+  const [farmerAssets, setFarmerAssets] = useState<DBAsset[]>([]);
+  const [tokenizingAsset, setTokenizingAsset] = useState<DBAsset | null>(null);
+  const [tokenConfig, setTokenConfig] = useState({ totalTokens: 1000, pricePerToken: 500 });
+
+  useEffect(() => {
+    if (role === 'FARMER') {
+      loadFarmerAssets();
+    }
+  }, [role]);
+
+  const loadFarmerAssets = async () => {
+    const assets = await dbService.getAssets();
+    setFarmerAssets(assets);
+  };
+
+  const handleTokenize = async () => {
+    if (!tokenizingAsset) return;
+    setIsProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    setIsProcessing(false);
+    showNotification(`Tokenisation réussie pour ${tokenizingAsset.id}. ${tokenConfig.totalTokens} tokens émis sur la Blockchain.`, "success", 5000);
+    setTokenizingAsset(null);
+  };
 
   const totalCost = selectedToken ? selectedToken.pricePerUnit * quantity : 0;
 
@@ -362,7 +387,110 @@ const Marketplace: React.FC = () => {
         </div>
       )}
 
-      {/* Reste du contenu (Portefeuille, Farmer Hub) ici ... */}
+      {/* Farmer Hub Content */}
+      {role === 'FARMER' && (
+        <div className="space-y-10 animate-in slide-in-from-bottom-10">
+          <div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
+            <div className="flex justify-between items-center mb-10">
+              <h3 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Mes Actifs Prêts pour Tokenisation</h3>
+              <button onClick={loadFarmerAssets} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Actualiser Registre</button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {farmerAssets.map(asset => (
+                <div key={asset.id} className="p-8 bg-slate-50 rounded-[3rem] border border-slate-100 group hover:bg-white hover:shadow-2xl transition-all">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-slate-100">
+                        {asset.type === 'MANIOC' ? '🌾' : '🍌'}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{asset.id}</p>
+                        <h4 className="text-xl font-black text-slate-800">{asset.type}</h4>
+                      </div>
+                    </div>
+                    <span className="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-[9px] font-black uppercase italic">Audit IA Validé</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Rendement Est.</p>
+                      <p className="text-lg font-black text-slate-800">{asset.estimatedYield} Tonnes</p>
+                    </div>
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Maturité</p>
+                      <p className="text-lg font-black text-blue-600">{asset.maturity}%</p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setTokenizingAsset(asset)}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3"
+                  >
+                    ⛓️ Tokeniser l'Actif
+                  </button>
+                </div>
+              ))}
+              {farmerAssets.length === 0 && (
+                <div className="col-span-full py-20 text-center opacity-20 italic font-black uppercase tracking-widest">Aucun actif audité disponible</div>
+              )}
+            </div>
+          </div>
+
+          {/* Tokenization Modal */}
+          {tokenizingAsset && (
+            <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
+              <div className="bg-white w-full max-w-lg rounded-[4rem] p-12 shadow-2xl border border-white relative">
+                <button onClick={() => setTokenizingAsset(null)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-800">✕</button>
+                
+                <div className="text-center mb-10">
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-2">Configuration de l'Offre</p>
+                  <h3 className="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">MINTING BLOCKCHAIN</h3>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase mb-4 px-2">Nombre de Tokens à émettre</p>
+                    <div className="flex items-center gap-6">
+                      <input 
+                        type="range" min="100" max="5000" step="100"
+                        className="flex-1 accent-slate-900"
+                        value={tokenConfig.totalTokens}
+                        onChange={(e) => setTokenConfig({...tokenConfig, totalTokens: parseInt(e.target.value)})}
+                      />
+                      <span className="text-2xl font-black text-slate-800 w-20">{tokenConfig.totalTokens}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase mb-4 px-2">Prix de Sortie par Token (XAF)</p>
+                    <input 
+                      type="number"
+                      className="w-full bg-transparent text-3xl font-black text-slate-800 outline-none px-2"
+                      value={tokenConfig.pricePerToken}
+                      onChange={(e) => setTokenConfig({...tokenConfig, pricePerToken: parseInt(e.target.value)})}
+                    />
+                  </div>
+
+                  <div className="pt-6 border-t border-slate-100 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Valeur Totale de l'Offre</p>
+                      <p className="text-3xl font-black text-slate-800">{(tokenConfig.totalTokens * tokenConfig.pricePerToken).toLocaleString()} <span className="text-sm">XAF</span></p>
+                    </div>
+                    <button 
+                      onClick={handleTokenize}
+                      disabled={isProcessing}
+                      className="px-10 py-5 bg-green-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest shadow-2xl hover:bg-green-500 transition-all disabled:opacity-50"
+                    >
+                      {isProcessing ? 'MINTING...' : 'LANCER L\'OFFRE'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

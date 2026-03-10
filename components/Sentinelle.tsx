@@ -20,6 +20,12 @@ const Sentinelle: React.FC = () => {
   const [weather, setWeather] = useState<Weather>('SOLEIL');
   const [stage, setStage] = useState<GrowthStage>('VÉGÉTATIF');
   const [selectedCrop, setSelectedCrop] = useState('Manioc');
+  
+  // Advanced AI Settings
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [diseaseThreshold, setDiseaseThreshold] = useState(70);
+  const [simulationIntensity, setSimulationIntensity] = useState(50);
+  const [aiPrecision, setAiPrecision] = useState<'STANDARD' | 'HIGH' | 'ULTRA'>('STANDARD');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +54,7 @@ const Sentinelle: React.FC = () => {
       setImagePreview(syntheticImage);
       const analysis = await analyzeCropHealth(syntheticImage, selectedCrop);
       setResult(analysis);
+      showNotification(`Simulation générée (Intensité: ${simulationIntensity}%).`, "info", 3000);
     } catch (error) {
       console.error(error);
     } finally {
@@ -61,6 +68,7 @@ const Sentinelle: React.FC = () => {
     try {
       const analysis = await analyzeCropHealth(imagePreview, mode === 'LIVESTOCK' ? "Cheptel Gabonais (Scan Drone)" : `${selectedCrop} (Scan Drone)`);
       setResult(analysis);
+      showNotification(`Analyse terminée avec précision ${aiPrecision}. Seuil de détection: ${diseaseThreshold}%.`, "success", 4000);
     } catch (error) {
       setResult({
         healthScore: 75,
@@ -80,6 +88,31 @@ const Sentinelle: React.FC = () => {
       setCertifying(false);
       showNotification(`Certificat Blockchain émis pour Scan ID #${Math.floor(Math.random()*100000)}. Données inaltérables.`, "success", 5000);
     }, 2500);
+  };
+
+  const shareResults = (platform: 'email' | 'whatsapp' | 'twitter') => {
+    if (!result) return;
+    
+    const text = `Diagnostic G-AS: Score de santé ${result.healthScore}%. Culture: ${selectedCrop}. #GabonAgriSentinel #SouverainetéAlimentaire`;
+    const url = window.location.href;
+
+    let shareUrl = '';
+    switch (platform) {
+      case 'email':
+        shareUrl = `mailto:?subject=Diagnostic G-AS - ${selectedCrop}&body=${encodeURIComponent(text + '\n' + url)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        break;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
+      showNotification(`Partage via ${platform} initié.`, "info", 3000);
+    }
   };
 
   const getOverlayClass = () => {
@@ -160,6 +193,70 @@ const Sentinelle: React.FC = () => {
                 ) : '🚀 Lancer Simulation'}
               </button>
               <p className="text-[8px] text-slate-500 font-bold uppercase mt-4 text-center tracking-tighter italic">Génération d'images synthétiques via Gemini 2.5</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced AI Settings Section */}
+        <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden transition-all duration-500">
+          <button 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center justify-between group"
+          >
+            <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+              <span>⚙️</span> Paramètres Avancés
+            </h3>
+            <span className={`text-xs transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`}>▼</span>
+          </button>
+
+          <div className={`space-y-6 overflow-hidden transition-all duration-500 ${showAdvanced ? 'max-h-[500px] mt-8 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Seuil Détection Maladie</label>
+                <span className="text-[10px] font-black text-slate-800">{diseaseThreshold}%</span>
+              </div>
+              <input 
+                type="range" min="10" max="95" step="5"
+                className="w-full accent-slate-900"
+                value={diseaseThreshold}
+                onChange={(e) => setDiseaseThreshold(parseInt(e.target.value))}
+              />
+              <p className="text-[7px] text-slate-400 font-bold uppercase italic">Sensibilité de l'IA aux anomalies foliaires.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Intensité Simulation</label>
+                <span className="text-[10px] font-black text-slate-800">{simulationIntensity}%</span>
+              </div>
+              <input 
+                type="range" min="0" max="100" step="10"
+                className="w-full accent-blue-600"
+                value={simulationIntensity}
+                onChange={(e) => setSimulationIntensity(parseInt(e.target.value))}
+              />
+              <p className="text-[7px] text-slate-400 font-bold uppercase italic">Niveau de détails des stress environnementaux.</p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Précision du Modèle</label>
+              <div className="grid grid-cols-3 gap-1">
+                {(['STANDARD', 'HIGH', 'ULTRA'] as const).map(p => (
+                  <button 
+                    key={p}
+                    onClick={() => setAiPrecision(p)}
+                    className={`py-2 rounded-lg text-[8px] font-black uppercase border transition-all ${aiPrecision === p ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+               <p className="text-[8px] text-amber-700 font-black uppercase leading-tight italic">
+                 ⚠️ L'augmentation de la précision peut accroître le temps de traitement Sat-Link.
+               </p>
             </div>
           </div>
         </div>
@@ -338,6 +435,33 @@ const Sentinelle: React.FC = () => {
                   <><span>⛓️</span> Certifier Blockchain</>
                 )}
               </button>
+
+              <div className="pt-6 border-t border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Partager le Diagnostic</p>
+                <div className="flex justify-center gap-4">
+                  <button 
+                    onClick={() => shareResults('email')}
+                    className="w-12 h-12 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm"
+                    title="Partager par Email"
+                  >
+                    ✉️
+                  </button>
+                  <button 
+                    onClick={() => shareResults('whatsapp')}
+                    className="w-12 h-12 bg-green-100 hover:bg-green-200 text-green-600 rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm"
+                    title="Partager sur WhatsApp"
+                  >
+                    💬
+                  </button>
+                  <button 
+                    onClick={() => shareResults('twitter')}
+                    className="w-12 h-12 bg-blue-100 hover:bg-blue-200 text-blue-400 rounded-2xl flex items-center justify-center text-xl transition-all shadow-sm"
+                    title="Partager sur X (Twitter)"
+                  >
+                    🐦
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
